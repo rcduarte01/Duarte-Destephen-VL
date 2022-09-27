@@ -1,4 +1,4 @@
 # MODELACIÓN DE MEDIOS FILTRANTES APLICANDO DIAGRAMAS DE VORONOI-LAGUERRE
 
-Repositorio para el artículo.
+En este repositorio se encuentran las funciones que generan las tablas y figuras del artículo "Modelación de medios filtrantes aplicando diagramas de Voronoi-Laguerre"
 
