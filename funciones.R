@@ -160,7 +160,9 @@ lanzarparticulasCC2<-function(capa,radio,muestra,numCAP){
 } 
 
 #Tabla 2: Eficiencia en función del tamaño de muestra
-Eficiencia <- function(numero_simulaciones, radio, capa, NUM){
+Eficiencia <- function(numero_simulaciones=50, radio, capa){
+  area <- pi*radio^2*1e-12
+  NUM   <- ceiling( 1.7519e9*0.10*5*area)
   vectorEF <- c()
   for(i in 1: numero_simulaciones ){
     tamano<-GenerarMuestra(distribucionPa,NUM)
@@ -180,7 +182,8 @@ Eficiencia <- function(numero_simulaciones, radio, capa, NUM){
   
   LI <- round(ell - z*sqrt(S2/numero_simulaciones),4)
   LS <- round(ell + z*sqrt(S2/numero_simulaciones),4)
-  cat("Eficiencia: ", round(ell,4),"\nVarianza: ",round(S2,5),
+  cat("Capa de radio: ", radio," Número de partículas lanzadas: ",NUM)
+  cat("\nEficiencia: ", round(ell,4),"\nVarianza: ",round(S2,5),
       "\nIntervalo de confianza: ",LI,LS )
   
 }
