@@ -1,12 +1,4 @@
 #Figura 5: Modelo de una capa generado
-CAPA100F5 <- read.csv("datos/CAPA100F5.csv")
-CAPA200F5 <- read.csv("datos/CAPA200F5.csv")
-CAPA300F5 <- read.csv("datos/CAPA300F5.csv")
-CAPA400F5 <- read.csv("datos/CAPA400F5.csv")
-CAPA500F5 <- read.csv("datos/CAPA500F5.csv")
-CAPA600F5 <- read.csv("datos/CAPA600F5.csv")
-CAPA700F5 <- read.csv("datos/CAPA700F5.csv")
-CAPA800F5 <- read.csv("datos/CAPA800F5.csv")
 
 graficarcapaC(200,CAPA200F5,TeX("Capa de radio 200 $\\mu m$"))
 
@@ -28,6 +20,31 @@ graficarcapaC(700,CAPA700F5,TeX("Capa de radio 700 $\\mu m$"))
 graficarcapaC(800,CAPA800F5,TeX("Capa de radio 800 $\\mu m$"))
 par(mfrow=c(1,1))
 
+# Tabla 2: Eficiencia en función del tamaño de muestra
+set.seed(2021)
+Eficiencia(numero_simulaciones = 50, radio=100, 
+           capa=CAPA100F5, NUM=28)
+
+Eficiencia(numero_simulaciones = 50, radio=200, 
+           capa=CAPA200F5, NUM=111)
+
+Eficiencia(numero_simulaciones = 50, radio=300, 
+           capa=CAPA300F5, NUM=248)
+
+Eficiencia(numero_simulaciones = 50, radio=400, 
+           capa=CAPA400F5, NUM=441)
+
+Eficiencia(numero_simulaciones = 50, radio=500, 
+           capa=CAPA500F5, NUM=688)
+
+Eficiencia(numero_simulaciones = 50, radio=600, 
+           capa=CAPA600F5, NUM=991)
+
+Eficiencia(numero_simulaciones = 50, radio=700, 
+           capa=CAPA700F5, NUM=1349)
+
+Eficiencia(numero_simulaciones = 50, radio=800, 
+           capa=CAPA800F5, NUM=1762)
 
 
 

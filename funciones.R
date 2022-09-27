@@ -170,8 +170,7 @@ Eficiencia <- function(numero_simulaciones, radio, capa, NUM){
     coory<-rep(0,NUM) # coordenada en y de la captura
     particulas<-cbind(tamano,estado,coorx,coory,capaCapt)
     
-    resultado <- lanzarparticulasCC2(capa,radio,
-                                     muestra = particulas,0)
+    resultado <- lanzarparticulasCC2(capa, radio, particulas, 0)
     
     vectorEF[i] <- resultado[[3]]/100
   }
@@ -181,7 +180,8 @@ Eficiencia <- function(numero_simulaciones, radio, capa, NUM){
   
   LI <- round(ell - z*sqrt(S2/numero_simulaciones),4)
   LS <- round(ell + z*sqrt(S2/numero_simulaciones),4)
-  cat(LI,LS)
+  cat("Eficiencia: ", round(ell,4),"\nVarianza: ",round(S2,5),
+      "\nIntervalo de confianza: ",LI,LS )
   
 }
 
