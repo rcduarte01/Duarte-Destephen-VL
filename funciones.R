@@ -8,6 +8,8 @@ CAPA600F5 <- read.csv("datos/CAPA600F5.csv")
 CAPA700F5 <- read.csv("datos/CAPA700F5.csv")
 CAPA800F5 <- read.csv("datos/CAPA800F5.csv")
 
+coulterporometerdata<- read.csv("datos/coulterporometerdata.csv")
+
 #Cargando distribución de particulas contaminantes
 {
   porosTT<-read.csv("datos/poros.dat",header = FALSE)
@@ -159,7 +161,7 @@ lanzarparticulasCC2<-function(capa,radio,muestra,numCAP){
   
 } 
 
-#Tabla 2: Eficiencia en función del tamaño de muestra
+#Eficiencia en función del tamaño de muestra
 Eficiencia <- function(numero_simulaciones=50, radio, capa){
   area <- pi*radio^2*1e-12
   NUM   <- ceiling( 1.7519e9*0.10*5*area)
@@ -186,8 +188,71 @@ Eficiencia <- function(numero_simulaciones=50, radio, capa){
   cat("\nEficiencia: ", round(ell,4),"\nVarianza: ",round(S2,5),
       "\nIntervalo de confianza: ",LI,LS )
   
+  invisible(c(ell, LI, LS))
+  
 }
 
+# Función que genera la figura 11 
+Figura11 <- function(){
+  radiosT <- c(TeX("Modelo radio 100 ($\\mu m$)"),
+               TeX("Modelo radio 200 ($\\mu m$)"),
+               TeX("Modelo radio 300 ($\\mu m$)"),
+               TeX("Modelo radio 400 ($\\mu m$)"),
+               TeX("Modelo radio 500 ($\\mu m$)"),
+               TeX("Modelo radio 600 ($\\mu m$)"),
+               TeX("Modelo radio 700 ($\\mu m$)"),
+               TeX("Modelo radio 800 ($\\mu m$)")
+  )
+  colores <- rainbow(10)
+  {
+    plot(density(coulterporometerdata$x,bw=0.29), col=colores[1],
+         main = "",axes=F,lwd=3,
+         xlab = "",
+         ylab = "",
+         yaxt="n",xaxt="n")
+    mtext(TeX("Radio de poros ($\\mu m$)"), side=1, line=4, cex=3)
+    
+    axis(2,cex.axis=2)
+    axis(1,cex.axis=2)
+    
+    
+    lines(density(CAPA100F5$r), ylim=c(0,0.24),
+          col=colores[2], lwd=3)
+    
+    
+    lines(density(CAPA200F5$r),
+          col=colores[3],lwd=3)
+    
+    lines(density(CAPA300F5$r),
+          col=colores[4],lwd=3)
+    
+    lines(density(CAPA400F5$r),
+          col=colores[5],lwd=3)
+    
+    lines(density(CAPA500F5$r),
+          col=colores[6],lwd=3)
+    
+    lines(density(CAPA600F5$r),
+          col=colores[7],lwd=3)
+    
+    lines(density(CAPA700F5$r,bw=0.29),
+          col=colores[8],lwd=3)
+    
+    
+    lines(density(CAPA800F5$r),
+          col=colores[9],lwd=3)
+    
+    legend("topleft",bty = "n",cex=1,
+           legend = c("Experimental Coulter Porometer",
+                      radiosT[1:4]),
+           lty = 1, col = colores[1:5], lwd = 3)
+    
+    legend("topright",bty = "n",cex=1,
+           legend = radiosT[5:8],
+           lty = 1, col = colores[6:9], lwd = 3)
+  }
+  
+}
 
   
   

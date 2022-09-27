@@ -1,4 +1,4 @@
-packages <- c("latex2exp","plotrix")
+packages <- c("latex2exp", "plotrix", "resample", "tidyverse")
 
 
 installed_packages <- packages %in% rownames(installed.packages())

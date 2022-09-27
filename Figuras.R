@@ -1,3 +1,4 @@
+
 #Figura 5: Modelo de una capa generado
 
 graficarcapaC(200,CAPA200F5,TeX("Capa de radio 200 $\\mu m$"))
@@ -22,30 +23,32 @@ par(mfrow=c(1,1))
 
 # Tabla 2: Eficiencia en función del tamaño de muestra
 set.seed(2021)
-Eficiencia(numero_simulaciones = 50, radio=100, 
-           capa=CAPA100F5, NUM=28)
+Eficiencia(radio=100, capa=CAPA100F5)
 
-Eficiencia(numero_simulaciones = 50, radio=200, 
-           capa=CAPA200F5, NUM=111)
+Eficiencia(radio=200, capa=CAPA200F5)
 
-Eficiencia(numero_simulaciones = 50, radio=300, 
-           capa=CAPA300F5, NUM=248)
+Eficiencia(radio=300, capa=CAPA300F5)
 
-Eficiencia(numero_simulaciones = 50, radio=400, 
-           capa=CAPA400F5, NUM=441)
+Eficiencia(radio=400, capa=CAPA400F5)
 
-Eficiencia(numero_simulaciones = 50, radio=500, 
-           capa=CAPA500F5, NUM=688)
+Eficiencia(radio=500, capa=CAPA500F5)
 
-Eficiencia(numero_simulaciones = 50, radio=600, 
-           capa=CAPA600F5, NUM=991)
+Eficiencia(radio=600, capa=CAPA600F5)
 
-Eficiencia(numero_simulaciones = 50, radio=700, 
-           capa=CAPA700F5, NUM=1349)
+Eficiencia(radio=700, capa=CAPA700F5)
 
-Eficiencia(numero_simulaciones = 50, radio=800, 
-           capa=CAPA800F5, NUM=1762)
+Eficiencia(radio=800, capa=CAPA800F5)
 
+
+#Figura 11:
+Figura11()
+
+# Figura 12: Estimaciones dinámicas de la eficiencia del filtro para diferentes tamaños
+#de partículas
+# OBS: Esta función con los datos de los experimentos del artículo
+# tarda aproximadamente 18 minutos en correr.
+
+eficienciaUnacapa()
 
 
 
