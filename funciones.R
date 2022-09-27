@@ -7,6 +7,7 @@ CAPA500F5 <- read.csv("datos/CAPA500F5.csv")
 CAPA600F5 <- read.csv("datos/CAPA600F5.csv")
 CAPA700F5 <- read.csv("datos/CAPA700F5.csv")
 CAPA800F5 <- read.csv("datos/CAPA800F5.csv")
+CAPA800F5_2 <- read.csv("datos/CAPA800F5_2.csv")
 
 coulterporometerdata<- read.csv("datos/coulterporometerdata.csv")
 
@@ -47,6 +48,14 @@ graficarcapaC<-function(radio,capa, titulo){
   }
 }
 
+# Función para graficar las particulas capturadas
+graficarParticulas<- function(color, particulas){
+  for(i in 1: dim(particulas)[1]){
+    draw.circle(x=particulas[i,3],y=particulas[i,4],
+                r=particulas[i,1]/2,
+                col=color)
+  }
+}
 
 # Función que genera la muestra de partículas contaminantes
 GenerarMuestra<-function(distribucion,n){
@@ -253,6 +262,160 @@ Figura11 <- function(){
   }
   
 }
+
+# funciónes  que calcula la eficiencia dinámica
+grafico_dinamico <- function(simulacion,tampar, tiempo_global){
+  eff<-c()
+  for(i in 1:tiempo_global){
+    
+    num <-sum(simulacion[[2]][[i]][,1] > tampar & 
+                simulacion[[2]][[i]][,2]==0)
+    
+    den <- sum(simulacion[[1]][[i]][,1]>tampar)
+    
+    eff[i]<-num/den
+  }
+  return(eff) 
+}
+
+lanzamiento_dinamico <- function(capa,radio,tiempo_global, deltaT){
+  capaX <- capa
+  capturas_por_min   <- list()
+  muestras_iniciales <- list()
+  # tiempo global en minutos
+  # calcular el número de particulas por minuto
+  area <- pi*radio^2*1e-12
+  NUM_particulas <-ceiling(1.7519e9*0.10*deltaT*area)
+  
+  for(i in 1: tiempo_global){
+    # generar tamaño de muestra de particulas por minuto
+    ##################################################################
+    tamano<-GenerarMuestra(distribucionPa,NUM_particulas)
+    estado<-rep(1,NUM_particulas)
+    capaCapt<- rep(0,NUM_particulas)
+    coorx<-rep(0,NUM_particulas) # coordenada en x de la captura
+    coory<-rep(0,NUM_particulas) # coordenada en y de la captura
+    muestras_iniciales[[i]]<-cbind(tamano,estado,coorx,coory,capaCapt)
+    ##################################################################
+    sim<-lanzarparticulasCC2(capaX,radio,muestras_iniciales[[i]],0)
+    capaX <- sim[[2]]
+    # particulas capturadas
+    capturas_por_min[[i]]<-sim[[1]]
+  }
+  return(list(muestras_iniciales,capturas_por_min))
+}
+
+lanzamiento_dinamico_multicapa <- function(capa1,capa2,capa3,radio, 
+                                           tiempo_global, deltaT){
+  capa1X <- capa1
+  capa2X <- capa2
+  capa3X <- capa3
+  
+  capturas_por_min   <- list() # capturas por deltaT
+  muestras_iniciales <- list() # muestra de particulas iniciales
+  
+  # tiempo global en deltaT minutos
+  # calcular el número de particulas por deltaT minutos
+  
+  area <- pi*radio^2*1e-12
+  NUM_particulas <-ceiling(1.7519e9*0.10*deltaT*area)
+  
+  for(i in 1: tiempo_global){
+    # generar tamaño de muestra de particulas por minuto
+    ######################################################
+    tamano<-GenerarMuestra(distribucionPa,NUM_particulas)
+    estado<-rep(1,NUM_particulas)
+    capaCapt<- rep(0,NUM_particulas)
+    coorx<-rep(0,NUM_particulas) # coordenada en x de la captura
+    coory<-rep(0,NUM_particulas) # coordenada en y de la captura
+    muestras_iniciales[[i]]<-cbind(tamano,estado,coorx,coory,capaCapt)
+    ######################################################
+    
+    sim<-lanzarparticulasCC2(capa1X,radio,muestras_iniciales[[i]],1)
+    capa1X <- sim[[2]] # guardo la capa con memoria de poros capturados
+    
+    sim<-lanzarparticulasCC2(capa2X,radio,sim[[1]],2)
+    capa2X <- sim[[2]] # guardo la capa con memoria de poros capturados
+    
+    sim<-lanzarparticulasCC2(capa3X,radio,sim[[1]],3)
+    capa3X <- sim[[2]] # guardo la capa con memoria de poros capturados
+    
+    capturas_por_min[[i]]<-sim[[1]]
+    
+  }
+  return(list(muestras_iniciales,capturas_por_min))
+}
+
+
+eficienciaUnacapa <- function(num_simulaciones=50, deltaT=5, tiempo_global=24){
+  set.seed(2021)
+  p1_una <- matrix(NA,nrow = num_simulaciones,
+                   ncol = tiempo_global)
+  p5_una <- matrix(NA,nrow = num_simulaciones,
+                   ncol = tiempo_global)
+  p10_una <- matrix(NA,nrow = num_simulaciones,
+                    ncol = tiempo_global)
+  p15_una <- matrix(NA,nrow = num_simulaciones,
+                    ncol = tiempo_global)
+  for( i in 1:num_simulaciones){
+    simulacion_una <- lanzamiento_dinamico(CAPA800F5,800,tiempo_global,deltaT)
+    p1_una[i,]  <- grafico_dinamico(simulacion_una, 1, tiempo_global)
+    p5_una[i,]  <- grafico_dinamico(simulacion_una, 5, tiempo_global)
+    p10_una[i,] <- grafico_dinamico(simulacion_una, 10, tiempo_global)
+    p15_una[i,] <- grafico_dinamico(simulacion_una, 15, tiempo_global)
+  }
+  
+  plot(5*c(1:24),colMeans(p15_una), type = "b", pch=1, 
+       lwd=3,main="", axes=F,
+       xlab = "",
+       ylab = "",
+       ylim=c(0.15,1.15) )
+  
+  lines(5*c(1:24), colMeans(p10_una), type = "b", pch=2, lwd=3)
+  lines(5*c(1:24), colMeans(p5_una), type = "b", pch=3,lwd=3)
+  lines(5*c(1:24), colMeans(p1_una), type = "b", pch=4,lwd=3)
+  
+  axis(2,cex.axis=2)
+  axis(1,cex.axis=2)
+  
+  
+  diametros <- c(TeX("D_p  > 1 ($\\mu m$)"),
+                 TeX("D_p  > 5 ($\\mu m$)"),
+                 TeX("D_p  > 10 ($\\mu m$)"),
+                 TeX("D_p  > 15 ($\\mu m$)")) 
+  
+  legend(x = "topleft",legend = diametros[1:2], cex=1.5,lty =0,
+         lwd=3, xpd = TRUE,pch = c(4,3),bty = "n")
+  
+  legend(x = "topright", legend = diametros[3:4], cex=1.5, lty =0,
+         lwd=3, xpd = TRUE, pch = c(2,1), bty = "n")
+  
+  mtext("Tiempo (Min)", side=1, line=2.5, cex=2)
+  mtext("Eficiencia %", side=2, line=2.5, cex=2)
+  
+}
+
+
+capturas1capa <- function(){
+  simulacion_multi <- lanzamiento_dinamico_multicapa(CAPA800F5,CAPA800F5_2,CAPA800F5,
+                                                     800,tiempo_global=24,deltaT=5)
+  
+  graficarcapaC(800,CAPA800F5,"")
+  ccc <- rep(c("red", "yellow", "blue"), c(8,8,8))
+  
+  for(i in 1:24){
+    temp <- subset(simulacion_multi[[2]][[i]], 
+                   simulacion_multi[[2]][[i]][,5]==1)
+    graficarParticulas(ccc[i], temp)
+    invisible(readline(prompt = "Presioná Enter para mostrar los proximos 5 minutos:"))
+  }
+  
+  
+}
+
+
+
+
 
   
   

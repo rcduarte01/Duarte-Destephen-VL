@@ -50,6 +50,12 @@ Figura11()
 
 eficienciaUnacapa()
 
+# Figura 13: Partículas capturadas en la superficie del filtro
+
+capturas1capa()
+
+
+
 
 
 
