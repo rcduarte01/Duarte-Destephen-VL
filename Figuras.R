@@ -21,6 +21,7 @@ graficarcapaC(700,CAPA700F5,TeX("Capa de radio 700 $\\mu m$"))
 graficarcapaC(800,CAPA800F5,TeX("Capa de radio 800 $\\mu m$"))
 par(mfrow=c(1,1))
 
+
 # Tabla 2: Eficiencia en función del tamaño de muestra
 set.seed(2021)
 Eficiencia(radio=100, capa=CAPA100F5)
@@ -44,9 +45,13 @@ Eficiencia(radio=800, capa=CAPA800F5)
 Figura11()
 
 # Figura 12: Estimaciones dinámicas de la eficiencia del filtro para diferentes tamaños
-#de partículas
+#de partícula.
+
+# Tabla 3: Varianzas máximas para la eficiencia por tamaño 
+# de partículas modelo de una capa
+
 # OBS: Esta función con los datos de los experimentos del artículo
-# tarda aproximadamente 18 minutos en correr.
+# tarda aproximadamente 20 minutos en correr.
 
 eficienciaUnacapa()
 
@@ -54,7 +59,16 @@ eficienciaUnacapa()
 
 capturas1capa()
 
+#Figura 14: Estimaciones dinámicas de la eficiencia del filtro 
+#para diferentes tamaños de partículas.
 
+#Tabla 4: Varianzas máximas para la eficiencia por tamaño de partículas
+#modelo multicapa.
+
+# OBS: Esta función con los datos de los experimentos del artículo
+# tarda aproximadamente 80 minutos en correr.
+
+eficienciaMulticapa()
 
 
 

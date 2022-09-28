@@ -1,4 +1,5 @@
 # Cargando capas generadas
+{
 CAPA100F5 <- read.csv("datos/CAPA100F5.csv")
 CAPA200F5 <- read.csv("datos/CAPA200F5.csv")
 CAPA300F5 <- read.csv("datos/CAPA300F5.csv")
@@ -8,6 +9,7 @@ CAPA600F5 <- read.csv("datos/CAPA600F5.csv")
 CAPA700F5 <- read.csv("datos/CAPA700F5.csv")
 CAPA800F5 <- read.csv("datos/CAPA800F5.csv")
 CAPA800F5_2 <- read.csv("datos/CAPA800F5_2.csv")
+}
 
 coulterporometerdata<- read.csv("datos/coulterporometerdata.csv")
 
@@ -193,7 +195,7 @@ Eficiencia <- function(numero_simulaciones=50, radio, capa){
   
   LI <- round(ell - z*sqrt(S2/numero_simulaciones),4)
   LS <- round(ell + z*sqrt(S2/numero_simulaciones),4)
-  cat("Capa de radio: ", radio," Número de partículas lanzadas: ",NUM)
+  cat("Radio de la capa: ", radio,"\nNúmero de partículas lanzadas: ",NUM)
   cat("\nEficiencia: ", round(ell,4),"\nVarianza: ",round(S2,5),
       "\nIntervalo de confianza: ",LI,LS )
   
@@ -393,6 +395,76 @@ eficienciaUnacapa <- function(num_simulaciones=50, deltaT=5, tiempo_global=24){
   mtext("Tiempo (Min)", side=1, line=2.5, cex=2)
   mtext("Eficiencia %", side=2, line=2.5, cex=2)
   
+  t1 <- round(max(colVars(p1_una)),5)
+  t2 <- round(max(colVars(p5_una)),5)
+  t3 <- round(max(colVars(p10_una)),5)
+  t4 <- round(max(colVars(p15_una)),5)
+  
+  cat("Varianzas máximas para la eficiencia por tamaño de partículas modelo de una capa",
+      "\nDp>1μm: ",t1, "\nDp>5μm: ",t2,"\nDp>10μm: ", t3,"\nDp>15μm: ",t4)
+}
+
+eficienciaMulticapa <- function(num_simulaciones=50, deltaT=5, tiempo_global=24){
+  set.seed(2021)
+  p1_multi <- matrix(NA,nrow = num_simulaciones,
+                     ncol = tiempo_global)
+  
+  p5_multi <- matrix(NA,nrow = num_simulaciones,
+                     ncol = tiempo_global)
+  
+  p10_multi <- matrix(NA,nrow = num_simulaciones,
+                      ncol = tiempo_global)
+  
+  p15_multi <- matrix(NA,nrow = num_simulaciones,
+                      ncol = tiempo_global)
+  
+  for( i in 1:num_simulaciones){
+    simulacion_multi <- lanzamiento_dinamico_multicapa(CAPA800F5,CAPA800F5_2,CAPA800F5,
+                                                       800,tiempo_global,deltaT)
+    
+    p1_multi[i,]  <- grafico_dinamico(simulacion_multi, 1, tiempo_global)
+    p5_multi[i,]  <- grafico_dinamico(simulacion_multi, 5, tiempo_global)
+    p10_multi[i,] <- grafico_dinamico(simulacion_multi, 10, tiempo_global)
+    p15_multi[i,] <- grafico_dinamico(simulacion_multi, 15, tiempo_global)
+    
+  }
+  
+  plot(5*c(1:24),colMeans(p15_multi), type = "b", 
+       pch=1, lwd=3,main="", axes=F, xlab = "", 
+       ylab = "", ylim=c(0.15,1.15) )
+  
+  lines(5*c(1:24), colMeans(p10_multi), type = "b", pch=2, lwd=3)
+  lines(5*c(1:24), colMeans(p5_multi), type = "b", pch=3,lwd=3)
+  lines(5*c(1:24), colMeans(p1_multi), type = "b", pch=4,lwd=3)
+  
+  axis(2,cex.axis=2)
+  axis(1,cex.axis=2)
+  
+  
+  diametros <- c(TeX("D_p  > 1 ($\\mu m$)"),
+                 TeX("D_p  > 5 ($\\mu m$)"),
+                 TeX("D_p  > 10 ($\\mu m$)"),
+                 TeX("D_p  > 15 ($\\mu m$)"))
+  
+  legend(x = "bottom", legend = diametros[1:2], 
+         cex=1.5,lty =0,lwd=3, xpd = TRUE,
+         pch = c(4,3), bty = "n")
+  
+  legend(x = "bottomright", legend = diametros[3:4], 
+         cex=1.5, lty =0, lwd=3, xpd = TRUE,
+         pch = c(2,1), bty = "n")
+  
+  mtext("Tiempo (Min)", side=1, line=2.5, cex=2)
+  mtext("Eficiencia %", side=2, line=2.5, cex=2)
+  
+  
+  t1 <- round(max(colVars(p1_multi)),5)
+  t2 <- round(max(colVars(p5_multi)),5)
+  t3 <- round(max(colVars(p10_multi)),5)
+  t4 <- round(max(colVars(p15_multi)),5)
+  
+  cat("Varianzas máximas para la eficiencia por tamaño de partículas modelo de una capa",
+      "\nDp>1μm: ",t1, "\nDp>5μm: ",t2,"\nDp>10μm: ", t3,"\nDp>15μm: ",t4)
 }
 
 
@@ -412,6 +484,8 @@ capturas1capa <- function(){
   
   
 }
+
+
 
 
 
