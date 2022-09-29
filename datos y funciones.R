@@ -24,13 +24,14 @@ coulterporometerdata<- read.csv("datos/coulterporometerdata.csv")
   F5$V1<-F5$V1/2
   F5<-F5[order(F5$V1), ]
   
-  
   distribucionPa$V2<-distribucionPa$V2/100
   distribucionPa$V2[21] <- 1
+  
+  F5[29,2] <- 1
 }
 
 # Función para graficar las capas 
-graficarcapaC<-function(radio,capa, titulo){
+graficarcapaC<-function(radio,capa, titulo=""){
   
   plot(NULL, xlim=c(0,2*radio), 
        ylim=c(0,2*radio), main=titulo,asp=1,
@@ -61,7 +62,7 @@ graficarParticulas<- function(color, particulas){
 
 # Función que genera la muestra de partículas contaminantes
 GenerarMuestra<-function(distribucion,n){
-  u<-runif(n,min = 0,max = 1)
+  u <- runif(n,min = 0,max = 1)
   muestra<-rep(0,n)
   #print(u)
   for(i in 1:n){
@@ -74,6 +75,7 @@ GenerarMuestra<-function(distribucion,n){
   }
   return(muestra)
 }
+
 
 # Función para lanzar las partículas
 lanzarparticulasCC2<-function(capa,radio,muestra,numCAP){
@@ -348,7 +350,6 @@ lanzamiento_dinamico_multicapa <- function(capa1,capa2,capa3,radio,
   return(list(muestras_iniciales,capturas_por_min))
 }
 
-
 eficienciaUnacapa <- function(num_simulaciones=50, deltaT=5, tiempo_global=24){
   set.seed(2021)
   p1_una <- matrix(NA,nrow = num_simulaciones,
@@ -467,7 +468,6 @@ eficienciaMulticapa <- function(num_simulaciones=50, deltaT=5, tiempo_global=24)
       "\nDp>1μm: ",t1, "\nDp>5μm: ",t2,"\nDp>10μm: ", t3,"\nDp>15μm: ",t4)
 }
 
-
 capturas1capa <- function(){
   simulacion_multi <- lanzamiento_dinamico_multicapa(CAPA800F5,CAPA800F5_2,CAPA800F5,
                                                      800,tiempo_global=24,deltaT=5)
@@ -484,6 +484,258 @@ capturas1capa <- function(){
   
   
 }
+
+
+# funcion devuelve las intersecciones entre dos circunferencias
+pintersect <- function(X,Y,R,r){
+  # calcula los puntos de interseccion entre dos puntos 
+  # X: coordendas en X para los puntos
+  # Y: coordenadas en Y para los pubtos
+  # R: Radios de los puntos
+  # r: radio que define la envolvente
+  R<-R+r
+  d<-sqrt((X[1]-X[2])^2+ (Y[1]-Y[2])^2)
+  l<-(R[1]^2-R[2]^2+d^2)/(2*d)
+  h<-sqrt( R[1]^2-l^2)
+  
+  I1<-c(l/d*(X[2]-X[1]) + h/d*(Y[2]-Y[1])+X[1], l/d*(Y[2]-Y[1])-h/d*(X[2]-X[1])+Y[1])
+  I2<-c(l/d*(X[2]-X[1]) - h/d*(Y[2]-Y[1])+X[1], l/d*(Y[2]-Y[1])+h/d*(X[2]-X[1])+Y[1])
+  
+  return(rbind(I1,I2))
+  
+} # validada
+
+# funcion que verifica si un poros se interseca con otro
+intersecPoro <- function(capa,x,y,r){
+  
+  # define una region de busqueda
+  # verdadero si está afuera
+  # falso si no lo está
+  rrr1<-x + 2*max(capa$r,r)
+  rrr2<-x - 2*max(capa$r,r)
+  rrr3<-y + 2*max(capa$r,r)
+  rrr4<-y - 2*max(capa$r,r)
+  
+  # definir subconjunto de busqueda
+  sub<-subset(capa, capa$x <= rrr1 & capa$x >= rrr2 & capa$y <= rrr3 & capa$y >= rrr4)
+  kkk<-dim(sub)[1]
+  #cat("\n kk=",kkk)
+  if(kkk==0){
+    temp<-TRUE
+    #temp<-c(x,y,r,3.14*r^2,1)
+    #draw.circle(x,y,radius=r,col = "white",border = "white")
+  }else{
+    # hacer la busqueda en la región
+    inter<-0
+    for(j in 1:kkk){
+      
+      dC<-sqrt( (x-sub[j,]$x)^2 + (y-sub[j,]$y)^2 )
+      
+      sR<-sub[j,]$r + r
+      
+      if(dC + 0.0000000001 >= sR)  {
+        #está fuera de la circunferencia
+        inter<-inter+1
+      }else{
+        temp<-FALSE
+        break
+      }
+    }
+    if(inter == kkk){
+      temp<-TRUE
+      #temp<-c(x,y,r,3.14*r^2,1)
+      #draw.circle(x,y,radius=r,col = "white",border = "white")
+      #break
+    }
+  }
+  return(temp)
+} # validada
+
+# funcion que verifica si un poro está dentro del sistema de coordenadas
+PoroInterior <- function(radio,x,y,r,Ra){
+  dC <- sqrt( (radio - x)^2+ (radio - y)^2) # distancia entre los centros
+  sR <- abs(radio+r+Ra) # suma de los radios
+  dR <- abs(radio+Ra-r) # diferencia de los radios
+  #cat(dC, sR,dR,"\n")
+  if(dC <= dR & dC < sR){
+    # esta adentro
+    return(TRUE)
+  }else{
+    return(FALSE)
+  }
+  
+}
+
+########################################
+
+# porosidad de adentro hacia afuera
+VorLag<-function(radio, muestra, Ra){ 
+  plot(NULL, xlim=c(0,2*radio), ylim=c(-Ra,2*radio+Ra), 
+       main="Simulacion de una capa", asp=1, xlab="", ylab="")
+  
+  #draw.circle(x=radio,y=radio,radius=radio+Ra,col="") 
+  draw.circle(x=radio,y=radio,radius=radio,col="black") 
+  
+  
+  capa <- data.frame(x=0,y=0,r=0,area=0,estado=0,angulo=0)
+  
+  # graficar el primero
+  r     <- muestra[1]
+  theta <- runif(1,min=0, max=2*pi)
+  l     <- runif(1,min = 0, max = radio-r) 
+  x     <- radio 
+  y     <- radio 
+  
+  capa[1,] <- c(x,y,r,3.14*r^2,1,sqrt((radio-x)^2+(radio-y)^2) )
+  draw.circle(x,y,r,border="black",col = "white")
+  
+  # graficar el segundo
+  r <- muestra[2]
+  
+  repeat{
+    theta <- runif(1,min = 0 ,max = 2*pi)
+    x     <- capa[1,]$x + (r+muestra[1]) *cos(theta)
+    y     <- capa[1,]$y + (r+muestra[1]) *sin(theta)
+    dC    <-sqrt( (radio-x)^2 + (radio-y)^2 )
+    dR<- radio-r
+    if( !(dC > dR) ){break}
+  }
+  
+  capa[2,]<-c(x,y,r,3.14*r^2,1, sqrt((radio-x)^2+(radio-y)^2)   )
+  draw.circle(x,y,r,border="black",col = "white")
+  
+  n<-length(muestra)
+  
+  for(k in 3:n){
+    r <- muestra[k]
+    capa[k,] <- HVor2G(capa,radio,r,k,Ra)  
+    
+    cat(green("\n poros: ",round(k/n*100,2)))
+    cat(red("\n porosidad: ",round(sum(pi*capa$r^2)/(pi*radio^2)*100),2))
+    
+  }
+  return(capa)
+}
+
+HVor2G<-function(capa, radio, r, k, Ra){
+  stop2<-FALSE
+  stop<-FALSE
+  retorno<-c()
+  
+  borrar <- busquedas[as.character(r), 2]
+  
+  indices   <-seq(1:dim(capa)[1])
+  indices   <- indices[indices >= borrar]
+  indiceant <- 0
+  
+  while(TRUE){
+    
+    repeat{
+      indice <- indices[1]
+      if(is.na(indice)){
+        busquedas[busquedas[,1]>=r ,2 ] <<- pmax(busquedas[busquedas[,1]>=r ,2 ],indiceant)
+        r <- busquedas[round(runif(1,1,r)),1]
+        indices <- seq(1:dim(capa)[1])
+        borrar  <- busquedas[as.character(r), 2]
+        indices <- indices[indices >= borrar]
+        indice  <- indices[1]
+      }
+      
+      indices <- indices[indices!= indice]
+      x       <- capa[indice,]$x
+      y       <- capa[indice,]$y
+      rrr1    <- x + 2*max(capa$r,r)
+      rrr2    <- x - 2*max(capa$r,r)
+      rrr3    <- y + 2*max(capa$r,r)
+      rrr4    <- y - 2*max(capa$r,r)
+      
+      # subconjunto de busqueda
+      sub <- capa %>% filter(capa$x <= rrr1 & capa$x >= rrr2 
+                             & capa$y <= rrr3 & capa$y >= rrr4)
+      
+      kk <- dim(sub)[1] # cantidad de poros en la región de busqueda
+      if( kk >= 2 ){break}
+    }
+    
+    for(i in (1):(kk-1)){
+      for(j in (i+1) : (kk)){
+        dC <- sqrt((sub[i,]$x-sub[j,]$x)^2 + (sub[i,]$y-sub[j,]$y)^2 )
+        sR <- sub[j,]$r + sub[i,]$r + 2*r
+        
+        if(dC<=sR){
+          X <- c(sub[i,]$x,sub[j,]$x)
+          Y <- c(sub[i,]$y,sub[j,]$y)
+          R <- c(sub[i,]$r,sub[j,]$r)
+          
+          temp <- pintersect(X,Y,R,r)
+          
+          if(intersecPoro(capa, temp[1,1], temp[1,2], r) & PoroInterior(radio,temp[1,1], temp[1,2],r,r)){
+            retorno<-c(temp[1,1], temp[1,2], r, 3.14*r^2, 1,sqrt((radio-temp[1,1])^2+(radio-temp[1,2])^2) )
+            draw.circle(temp[1,1],temp[1,2],r,border="black",col = "white")
+            stop  <- TRUE
+            stop2 <- TRUE
+            busquedas[busquedas[,1]>=r ,2 ]<<- pmax(busquedas[busquedas[,1]>=r ,2 ],indice)
+            break
+          }else if(intersecPoro(capa ,temp[2,1],temp[2,2],r) & PoroInterior(radio,temp[2,1], temp[2,2],r,r) ){
+            retorno <- c(temp[2,1], temp[2,2], r, 3.14*r^2, 1,sqrt((radio-temp[2,1])^2+(radio-temp[2,2])^2))
+            draw.circle(temp[2,1],temp[2,2],r,border="black",col = "white")
+            stop<-TRUE
+            stop2<-TRUE
+            break
+          }
+        }
+        
+        indices <- indices[indices!= as.numeric(rownames(sub[j,]))]
+      }
+      if(stop){break}
+      indices   <- indices[indices!= as.numeric(rownames(sub[i,]))]
+      indiceant <- indice
+      
+    }
+    
+    if(stop2){break}
+  }
+  return(retorno)
+}
+
+GenerarCapa <- function(radio){
+  porosidad <- 0.883 
+  
+  
+  {
+    poros <- c()
+    areap <- 0
+    area  <- pi*(radio)^2
+    while(areap <= porosidad){
+      temp <- GenerarMuestra(F5,1) 
+      areap <- areap + pi*temp^2/area
+      poros <- c(poros,temp)
+    }
+    
+  }
+  
+  busquedas <<- cbind(as.numeric(names(table(poros))),
+                      rep(1,length(table(poros))))
+  
+  rownames(busquedas) <<- c(as.numeric(names(table(poros))))
+  
+  
+  tiempo <- proc.time() 
+  CAPA <- VorLag( radio, poros, 3)
+  proc.time() - tiempo   
+  
+  return(CAPA)
+}
+
+VorLag <- cmpfun(VorLag)
+
+subset <- cmpfun(subset)
+HVor2G<- cmpfun(HVor2G)
+intersecPoro<- cmpfun(intersecPoro)
+PoroInterior<- cmpfun(PoroInterior)
+
+
+
 
 
 
